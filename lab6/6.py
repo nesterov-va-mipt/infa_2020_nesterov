@@ -2,18 +2,12 @@ import pygame
 from pygame.draw import *
 from random import randint
 
-name = input('Твое имя: ')
-if name == '':
-    name = 'NoName'
-
-pygame.init()
-
 WIDTH = 1200
 HEIGHT = 900
-V = 15
-T = 100
+V = 15 # максимальная стартовая проекция скорости
+T = 100 # "время жизни" одного шарика
 
-N = 15
+N = 15 # нормальное кол-во шариков
 
 FPS = 30
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -26,6 +20,17 @@ MAGENTA = (255, 0, 255)
 CYAN = (0, 255, 255)
 BLACK = (0, 0, 0)
 COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
+
+# очки которые даются за каждую мишень
+BALL_SCORE = 1
+TROLL_SCORE = 100
+score = 0
+
+name = input('Твое имя: ')
+if name == '':
+    name = 'NoName'
+
+pygame.init()
 
 class Ball:
     def __init__(self, coord, r, v, color):
@@ -54,9 +59,9 @@ class Ball:
             self.v[1] = randint(-V, 0)
 
 troll_surf = pygame.transform.scale(pygame.image.load('trollface.png'), (173, 144))
-TROLL_R = 75
-TROLL_B = 0.01
-TROLL_K = 60000
+TROLL_R = 75 # радиус
+TROLL_B = 0.01 # коэффициент вязкости, действующей на тролля
+TROLL_K = 90000 # коэффициент гравитации, действующей на тролля (отталкивание от курсора)
 
 class Troll:
     def __init__(self, coord, v):
@@ -101,10 +106,9 @@ def create_ball():
     return Ball([randint(r, WIDTH - r), randint(r, HEIGHT - r)], r, [randint(-V, V),
         randint(-V, V)], COLORS[randint(0, 5)])
 
-
 def click(event):
     global balls, score
-    new_balls = []
+    new_balls = [] # все выжившие мишени отправляются в new_balls, за все убитые даются очки
     for ball in balls:
         if ball.check_click(event.pos):
             score += BALL_SCORE
@@ -131,28 +135,24 @@ def update_record_table():
 
     f.close()
     f = open('table.txt', 'w')
+    # сортировка таблицы
     pairs = [(table[key], key) for key in table]
     pairs.sort()
     pairs.reverse()
     f.write('Name\t\t\tScore\n' + '\n'.join(['{}\t\t\t\t{}'.format(p[1], p[0]) for p in pairs]))
     f.close()
 
-BALL_SCORE = 1
-TROLL_SCORE = 100
-score = 0
-
+# создание мишеней
 balls = []
 for i in range(N):
     balls.append( create_ball() )
-
 troll = Troll([WIDTH // 2, HEIGHT // 2], [randint(0, V // 2), randint(0, V // 2)])
-#troll = Troll([WIDTH // 2, HEIGHT // 2], [0, 0])
+
+cursor_coord = [1000000, 1000000] # начальные координаты курсора = очень далеко
 
 pygame.display.update()
 clock = pygame.time.Clock()
 finished = False
-
-cursor_coord = [1000000, 1000000]
 
 while not finished:
     clock.tick(FPS)
@@ -164,11 +164,13 @@ while not finished:
             click(event)
         elif event.type == pygame.MOUSEMOTION:
             cursor_coord = event.pos
+    # движение и отрисовка мишеней
     for ball in balls:
         ball.move()
         ball.draw()
     troll.move()
     troll.draw()
+    # случайное рождение и смерть шаров
     if randint(0, T) == 1:
         balls.pop(randint(0, len(balls) - 1))
     if randint(0, len(balls)) == 0:
