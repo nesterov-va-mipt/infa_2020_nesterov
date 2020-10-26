@@ -14,6 +14,8 @@ root.geometry('800x600')
 canv = tk.Canvas(root, bg='white')
 canv.pack(fill=tk.BOTH, expand=1)
 
+canv.create_rectangle(0, 0, 795, 605, outline="#000")
+
 b = 0.02
 k = 1
 g = 1
